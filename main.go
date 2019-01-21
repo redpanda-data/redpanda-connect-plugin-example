@@ -66,6 +66,10 @@ func NewExample(
 
 	e := &Example{
 		size: conf.Length,
+
+		transactionsChan: make(chan types.Transaction),
+		closeChan:        make(chan struct{}),
+		closedChan:       make(chan struct{}),
 	}
 
 	go e.loop()
@@ -86,6 +90,8 @@ func (e *Example) loop() {
 		for k := range b {
 			b[k] = byte(rand.Int())
 		}
+		
+		// send batch to downstream processors
 		select {
 		case e.transactionsChan <- types.NewTransaction(
 			message.New([][]byte{b}),
@@ -94,8 +100,14 @@ func (e *Example) loop() {
 		case <-e.closeChan:
 			return
 		}
+		
+		// check transaction success
 		select {
-		case <-resChan:
+		case result := <-resChan:
+			if nil != result.Error() {
+				e.log.Errorln(result.Error().Error())
+				continue
+			}
 		case <-e.closeChan:
 			return
 		}
