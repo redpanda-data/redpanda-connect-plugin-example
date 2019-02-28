@@ -35,9 +35,3 @@ pipeline:
 output:
   type: stdout
 ```
-
-You can also print documentation from Benthos for any loaded plugins with
-`--list-<component>-plugins`. For example, to print documentation any input
-plugins that are loaded:
-
-`benthos --list-input-plugins`
