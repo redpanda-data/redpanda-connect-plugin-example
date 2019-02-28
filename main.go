@@ -1,136 +1,152 @@
 package main
 
 import (
-	"errors"
-	"math/rand"
+	"context"
+	"flag"
+	"fmt"
+	"net/http"
+	_ "net/http/pprof"
+	"os"
+	"os/signal"
+	"runtime/pprof"
+	"syscall"
 	"time"
 
-	"github.com/Jeffail/benthos/lib/input"
+	_ "github.com/Jeffail/benthos-plugin-example/condition"
+	_ "github.com/Jeffail/benthos-plugin-example/input"
+	_ "github.com/Jeffail/benthos-plugin-example/processor"
+	"github.com/Jeffail/benthos/lib/api"
+	"github.com/Jeffail/benthos/lib/config"
 	"github.com/Jeffail/benthos/lib/log"
-	"github.com/Jeffail/benthos/lib/message"
+	"github.com/Jeffail/benthos/lib/manager"
 	"github.com/Jeffail/benthos/lib/metrics"
-	"github.com/Jeffail/benthos/lib/types"
+	"github.com/Jeffail/benthos/lib/stream"
 )
-
-func init() {
-	input.RegisterPlugin(
-		"example",
-		func() interface{} {
-			return NewExampleConfig()
-		},
-		func(iconf interface{}, mgr types.Manager, logger log.Modular, stats metrics.Type) (types.Input, error) {
-			return NewExample(iconf, mgr, logger, stats)
-		},
-	)
-
-	input.DocumentPlugin(
-		"example",
-		`This plugin example creates an input that generates gibberish messages.`,
-		nil, // No need to sanitise the config.
-	)
-}
-
-// ExampleConfig contains config fields for our plugin type.
-type ExampleConfig struct {
-	Length int `json:"length" yaml:"length"`
-}
-
-// NewExampleConfig creates a config with default values.
-func NewExampleConfig() *ExampleConfig {
-	return &ExampleConfig{
-		Length: 1000,
-	}
-}
-
-// Example is an example plugin that creates gibberish messages.
-type Example struct {
-	size int
-
-	transactionsChan chan types.Transaction
-
-	closeChan  chan struct{}
-	closedChan chan struct{}
-}
-
-// NewExample creates a new example plugin input type.
-func NewExample(
-	iconf interface{},
-	mgr types.Manager,
-	log log.Modular,
-	stats metrics.Type,
-) (input.Type, error) {
-	conf, ok := iconf.(*ExampleConfig)
-	if !ok {
-		return nil, errors.New("failed to cast config")
-	}
-
-	e := &Example{
-		size: conf.Length,
-
-		transactionsChan: make(chan types.Transaction),
-		closeChan:        make(chan struct{}),
-		closedChan:       make(chan struct{}),
-	}
-
-	go e.loop()
-	return e, nil
-}
 
 //------------------------------------------------------------------------------
 
-func (e *Example) loop() {
-	defer func() {
-		close(e.transactionsChan)
-		close(e.closedChan)
+var configPath = flag.String("c", "", "Path to a Benthos config file")
+
+func main() {
+	flag.Parse()
+
+	conf := config.New()
+	lints := []string{}
+
+	if len(*configPath) > 0 {
+		var err error
+		if lints, err = config.Read(*configPath, true, &conf); err != nil {
+			fmt.Fprintf(os.Stderr, "Configuration file read error: %v\n", err)
+			os.Exit(1)
+		}
+	}
+
+	logger := log.New(os.Stdout, conf.Logger)
+	for _, lint := range lints {
+		logger.Infoln(lint)
+	}
+
+	// Create our metrics type.
+	stats, err := metrics.New(conf.Metrics, metrics.OptSetLogger(logger))
+	if err != nil {
+		logger.Errorf("Failed to connect to metrics aggregator: %v\n", err)
+		os.Exit(1)
+	}
+	defer stats.Close()
+
+	// Create HTTP API.
+	httpServer, err := api.New("", "", conf.HTTP, conf, logger, stats)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create API: %v\n", err)
+		os.Exit(1)
+	}
+
+	// Create resource manager.
+	resourceMgr, err := manager.New(conf.Manager, httpServer, logger, stats)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Failed to create resource: %v\n", err)
+		os.Exit(1)
+	}
+
+	dataStreamClosedChan := make(chan struct{})
+
+	// Create stream pipeline.
+	dataStream, err := stream.New(
+		conf.Config,
+		stream.OptSetManager(resourceMgr),
+		stream.OptSetLogger(logger),
+		stream.OptSetStats(stats),
+		stream.OptOnClose(func() {
+			close(dataStreamClosedChan)
+		}),
+	)
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Service closing due to: %v\n", err)
+		os.Exit(1)
+	}
+	logger.Infoln("Launching a Benthos instance, use CTRL+C to close.")
+
+	// Start HTTP server.
+	httpServerClosedChan := make(chan struct{})
+	go func() {
+		logger.Infof(
+			"Listening for HTTP requests at: %v\n",
+			"http://"+conf.HTTP.Address,
+		)
+		httpErr := httpServer.ListenAndServe()
+		if httpErr != nil && httpErr != http.ErrServerClosed {
+			logger.Errorf("HTTP Server error: %v\n", httpErr)
+		}
+		close(httpServerClosedChan)
 	}()
 
-	resChan := make(chan types.Response)
-	for {
-		b := make([]byte, e.size)
-		for k := range b {
-			b[k] = byte(rand.Int())
+	var exitTimeout time.Duration
+	if tout := conf.SystemCloseTimeout; len(tout) > 0 {
+		var err error
+		if exitTimeout, err = time.ParseDuration(tout); err != nil {
+			logger.Errorf("Failed to parse shutdown timeout period string: %v\n", err)
+			os.Exit(1)
 		}
-		
-		// send batch to downstream processors
-		select {
-		case e.transactionsChan <- types.NewTransaction(
-			message.New([][]byte{b}),
-			resChan,
-		):
-		case <-e.closeChan:
-			return
-		}
-		
-		// check transaction success
-		select {
-		case result := <-resChan:
-			if nil != result.Error() {
-				e.log.Errorln(result.Error().Error())
-				continue
+	}
+
+	// Defer clean up.
+	defer func() {
+		go func() {
+			httpServer.Shutdown(context.Background())
+			select {
+			case <-httpServerClosedChan:
+			case <-time.After(exitTimeout / 2):
+				logger.Warnln("Service failed to close HTTP server gracefully in time.")
 			}
-		case <-e.closeChan:
-			return
+		}()
+
+		go func() {
+			<-time.After(exitTimeout + time.Second)
+			logger.Warnln(
+				"Service failed to close cleanly within allocated time." +
+					" Exiting forcefully and dumping stack trace to stderr.",
+			)
+			pprof.Lookup("goroutine").WriteTo(os.Stderr, 1)
+			os.Exit(1)
+		}()
+
+		if err := dataStream.Stop(exitTimeout); err != nil {
+			os.Exit(1)
 		}
-	}
-}
+	}()
 
-// TransactionChan returns a transactions channel for consuming messages from
-// this input type.
-func (e *Example) TransactionChan() <-chan types.Transaction {
-	return e.transactionsChan
-}
+	sigChan := make(chan os.Signal, 1)
+	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
-// CloseAsync shuts down the input and stops processing requests.
-func (e *Example) CloseAsync() {
-	close(e.closeChan)
-}
-
-// WaitForClose blocks until the input has closed down.
-func (e *Example) WaitForClose(timeout time.Duration) error {
+	// Wait for termination signal
 	select {
-	case <-e.closedChan:
-	case <-time.After(timeout):
-		return types.ErrTimeout
+	case <-sigChan:
+		logger.Infoln("Received SIGTERM, the service is closing.")
+	case <-dataStreamClosedChan:
+		logger.Infoln("Pipeline outputs have terminated. Shutting down the service.")
+	case <-httpServerClosedChan:
+		logger.Infoln("HTTP Server has terminated. Shutting down the service.")
 	}
-	return nil
 }
+
+//------------------------------------------------------------------------------

@@ -3,26 +3,37 @@ Benthos Plugin Example
 
 ## WARNING: EXPERIMENTAL
 
-This project demonstrates how to build a Benthos plugin. Once built, these
-plugins can be dynamically loaded into Benthos by placing it into a directory
-and pointing Benthos to that directory with the flag `plugins-dir`
-(`/usr/lib/benthos/plugins`, by default.)
+This project demonstrates how to build your own Benthos component plugins into a
+new service. There are [input](./input), [processor](./processor) and
+[condition](./condition) examples.
 
 ## Build
 
-`go build -buildmode=plugin`
+`go build`
 
 ## Run
 
-Once Benthos is run with your plugin loaded you can use it like any other type,
-with the only exception being that the config field for plugin specific fields
-is always `plugin`. For example, our example plugin config would look like this:
+This new service comes with all the usual Benthos components plus all of your
+custom plugins which you can use like any other type, with the only exception
+being that the config field for plugin specific fields is always `plugin`. For
+example, to use the example plugin components `gibberish`, `is_all_caps` and
+`reverse` our config might look like this:
 
 ``` yaml
 input:
-  type: example
+  type: gibberish
   plugin:
     length: 100
+
+pipeline:
+  processors:
+  - type: reverse
+  - type: filter_parts
+    filter_parts:
+      type: is_all_caps 
+
+output:
+  type: stdout
 ```
 
 You can also print documentation from Benthos for any loaded plugins with
