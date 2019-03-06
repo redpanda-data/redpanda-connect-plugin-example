@@ -1,1 +1,3 @@
-benthos-plugin-example.so
+benthos-plugin-example
+go.sum
+lib

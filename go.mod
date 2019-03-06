@@ -1,3 +1,3 @@
-module github.com/Jeffail/benthos-plugin-example
+module github.com/benthosdev/benthos-plugin-example
 
-require github.com/Jeffail/benthos v1.7.1
+require github.com/Jeffail/benthos v1.7.5

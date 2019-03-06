@@ -1,15 +1,32 @@
 Benthos Plugin Example
 ======================
 
-## WARNING: EXPERIMENTAL
+This project demonstrates how to build your own Benthos component plugins and
+run them. Once your plugins are written there are two ways of adding them to
+a Benthos service.
 
-This project demonstrates how to build your own Benthos component plugins into a
-new service. There are [input](./input), [processor](./processor) and
-[condition](./condition) examples.
+## Build with Custom Main Func
 
-## Build
+You can create your own service with your plugins by copying the Benthos
+[main func](https://github.com/Jeffail/benthos/blob/master/cmd/benthos/main.go) 
+and adding your plugin packages as dependencies
+[at the top](./cmd/benthos-plugin-example/main.go#L22).
 
-`go build`
+`go build ./cmd/benthos-plugin-example`
+
+## EXPERIMENTAL: Build Plugins as a Library
+
+You can also compile your plugins into a library:
+
+`go build -buildmode=plugin -o ./lib/benthos-plugin-example.so`
+
+And then have a Benthos service load it from a directory:
+
+`benthos -plugins-dir ./yourplugindir -c ./yourconfig.yaml`
+
+NOTE: This requires exactly matching the build process and dependencies of the
+original Benthos binary, this can be quite difficult without isolated build
+environments.
 
 ## Run
 
