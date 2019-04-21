@@ -3,6 +3,7 @@ package input
 import (
 	"errors"
 	"math/rand"
+	"sync"
 	"time"
 
 	"github.com/Jeffail/benthos/lib/input"
@@ -29,7 +30,8 @@ func init() {
 
 	input.DocumentPlugin(
 		"gibberish",
-		`This plugin example creates an input that generates gibberish messages.`,
+		`
+This plugin example creates an input that generates gibberish ascii messages.`,
 		nil, // No need to sanitise the config.
 	)
 }
@@ -55,6 +57,7 @@ type Gibberish struct {
 	log   log.Modular
 	stats metrics.Type
 
+	closeOnce  sync.Once
 	closeChan  chan struct{}
 	closedChan chan struct{}
 }
@@ -93,7 +96,7 @@ func (e *Gibberish) loop() {
 	for {
 		b := make([]byte, e.size)
 		for k := range b {
-			b[k] = byte(rand.Int())
+			b[k] = byte((rand.Int() % 94) + 32)
 		}
 
 		// send batch to downstream processors
@@ -132,7 +135,9 @@ func (e *Gibberish) TransactionChan() <-chan types.Transaction {
 
 // CloseAsync shuts down the input and stops processing requests.
 func (e *Gibberish) CloseAsync() {
-	close(e.closeChan)
+	e.closeOnce.Do(func() {
+		close(e.closeChan)
+	})
 }
 
 // WaitForClose blocks until the input has closed down.
