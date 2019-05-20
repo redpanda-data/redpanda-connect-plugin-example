@@ -10,8 +10,25 @@ Start by writing your plugins where ever you like, there are examples in this
 repo for [inputs][inputs], [processors][processors], [conditions][conditions]
 and [outputs][outputs] to copy from.
 
-Next, copy the Benthos [main func][benthos-main] and add your plugin packages as
-dependencies at the top [as shown in this example][plugin-main].
+Next, author a main file that calls `service.Run()` and imports your plugins
+[as shown in this example][plugin-main]:
+
+``` go
+package main
+
+import (
+	"github.com/Jeffail/benthos/lib/service"
+
+	// Add your plugin packages here
+	_ "github.com/benthosdev/benthos-plugin-example/input"
+	_ "github.com/benthosdev/benthos-plugin-example/output"
+	_ "github.com/benthosdev/benthos-plugin-example/processor"
+)
+
+func main() {
+	service.Run()
+}
+```
 
 Finally, build your custom main func:
 
@@ -53,7 +70,6 @@ And you can run it like this:
 
 `./benthos-plugin-example -c ./yourconfig.yaml`
 
-[benthos-main]: https://github.com/Jeffail/benthos/blob/master/cmd/benthos/main.go
 [plugin-main]: ./cmd/benthos-plugin-example/main.go#L22
 [inputs]: ./input
 [processors]: ./processor
