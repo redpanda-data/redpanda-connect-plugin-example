@@ -16,8 +16,9 @@ func init() {
 	output.RegisterPlugin(
 		"blue_stdout",
 		func() interface{} {
-			conf := NewBlueStdoutConfig()
-			return &conf
+			// No configuration needed but we must return an addressable value.
+			s := struct{}{}
+			return &s
 		},
 		func(iconf interface{}, mgr types.Manager, logger log.Modular, stats metrics.Type) (types.Output, error) {
 			return NewBlueStdout(mgr, logger, stats)
@@ -29,19 +30,12 @@ func init() {
 		`
 This plugin example creates an output that writes messages to stdout BUT THE
 TEXT IS HECKING BLUE!`,
-		nil, // No need to sanitise the config.
+		func(conf interface{}) interface{} {
+			// Returning nil here removes the `plugin` section from the config
+			// entirely.
+			return nil
+		},
 	)
-}
-
-//------------------------------------------------------------------------------
-
-// BlueStdoutConfig contains configuration fields for the BlueStdout output.
-type BlueStdoutConfig struct {
-}
-
-// NewBlueStdoutConfig returns a BlueStdoutConfig with default values.
-func NewBlueStdoutConfig() BlueStdoutConfig {
-	return BlueStdoutConfig{}
 }
 
 //------------------------------------------------------------------------------

@@ -1,7 +1,6 @@
 package processor
 
 import (
-	"errors"
 	"time"
 
 	"github.com/Jeffail/benthos/lib/log"
@@ -16,8 +15,9 @@ func init() {
 	processor.RegisterPlugin(
 		"reverse",
 		func() interface{} {
-			conf := NewReverseConfig()
-			return &conf
+			// No configuration needed but we must return an addressable value.
+			s := struct{}{}
+			return &s
 		},
 		func(
 			iconf interface{},
@@ -25,46 +25,33 @@ func init() {
 			logger log.Modular,
 			stats metrics.Type,
 		) (types.Processor, error) {
-			conf, ok := iconf.(*ReverseConfig)
-			if !ok {
-				return nil, errors.New("failed to cast config")
-			}
-			return NewReverse(*conf, logger, stats)
+			return NewReverse(logger, stats)
 		},
 	)
 	processor.DocumentPlugin(
 		"reverse",
 		`Reverses the raw bytes of every message.`,
-		nil,
+		func(conf interface{}) interface{} {
+			// Returning nil here removes the `plugin` section from the config
+			// entirely.
+			return nil
+		},
 	)
-}
-
-//------------------------------------------------------------------------------
-
-// ReverseConfig contains configuration fields for the Reverse processor.
-type ReverseConfig struct {
-}
-
-// NewReverseConfig returns a ReverseConfig with default values.
-func NewReverseConfig() ReverseConfig {
-	return ReverseConfig{}
 }
 
 //------------------------------------------------------------------------------
 
 // Reverse is a processor that reverses all messages.
 type Reverse struct {
-	conf  ReverseConfig
 	log   log.Modular
 	stats metrics.Type
 }
 
 // NewReverse returns a Reverse processor.
 func NewReverse(
-	conf ReverseConfig, log log.Modular, stats metrics.Type,
+	log log.Modular, stats metrics.Type,
 ) (types.Processor, error) {
 	m := &Reverse{
-		conf:  conf,
 		log:   log,
 		stats: stats,
 	}
