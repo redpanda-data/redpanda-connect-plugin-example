@@ -13,12 +13,7 @@ import (
 
 func init() {
 	processor.RegisterPlugin(
-		"reverse",
-		func() interface{} {
-			// No configuration needed but we must return an addressable value.
-			s := struct{}{}
-			return &s
-		},
+		"reverse", nil, // No configuration needed
 		func(
 			iconf interface{},
 			mgr types.Manager,
@@ -31,11 +26,7 @@ func init() {
 	processor.DocumentPlugin(
 		"reverse",
 		`Reverses the raw bytes of every message.`,
-		func(conf interface{}) interface{} {
-			// Returning nil here removes the `plugin` section from the config
-			// entirely.
-			return nil
-		},
+		nil,
 	)
 }
 
