@@ -32,7 +32,7 @@ Finally, build your custom main func:
 go build ./cmd/benthos-plugin-example
 ```
 
-### Serverless
+### Serverless
 
 In order to build a serverless distribution of Benthos you follow the same steps, but instead of importing the `service` package you import a serverless package corresponding with your target platform [as shown in this AWS Lambda example][plugin-lambda-main].
 
