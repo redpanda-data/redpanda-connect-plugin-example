@@ -13,7 +13,7 @@ Next, author a main file that calls `service.Run()` and imports your plugins [as
 package main
 
 import (
-	"github.com/Jeffail/benthos/lib/service"
+	"github.com/Jeffail/benthos/v3/lib/service"
 
 	// Add your plugin packages here
 	_ "github.com/benthosdev/benthos-plugin-example/input"
