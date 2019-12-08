@@ -7,6 +7,7 @@ import (
 	_ "github.com/benthosdev/benthos-plugin-example/cache"
 	_ "github.com/benthosdev/benthos-plugin-example/condition"
 	_ "github.com/benthosdev/benthos-plugin-example/input"
+	_ "github.com/benthosdev/benthos-plugin-example/manager"
 	_ "github.com/benthosdev/benthos-plugin-example/output"
 	_ "github.com/benthosdev/benthos-plugin-example/processor"
 )

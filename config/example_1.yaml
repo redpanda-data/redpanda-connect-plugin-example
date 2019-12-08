@@ -1,0 +1,16 @@
+input:
+  type: gibberish
+  plugin:
+    length: 80
+
+pipeline:
+  processors:
+  - throttle:
+      period: 1s
+  - type: reverse
+  - filter_parts:
+      not:
+        type: is_all_caps
+
+output:
+  type: blue_stdout

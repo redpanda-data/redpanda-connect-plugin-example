@@ -1,0 +1,39 @@
+input:
+  type: gibberish
+  plugin:
+    length: 10
+
+pipeline:
+  processors:
+  - encode:
+      scheme: base64
+  - text:
+      operator: set
+      value: '{"gibberish":"${!content}"}'
+  - type: global_counter
+    plugin:
+      resource: total
+  - conditional:
+      condition:
+        jmespath:
+          query: "contains(gibberish, 'a')"
+      processors:
+      - type: global_counter
+        plugin:
+          resource: contains_a
+  - throttle:
+      period: 1s
+
+output:
+  type: blue_stdout
+
+resources:
+  plugins:
+    total:
+      type: global_counter
+      plugin:
+        path: messages.total
+    contains_a:
+      type: global_counter
+      plugin:
+        path: messages.containing_a

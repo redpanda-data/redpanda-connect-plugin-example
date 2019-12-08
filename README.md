@@ -57,13 +57,10 @@ input:
 
 pipeline:
   processors:
-  - type: throttle
-    throttle:
+  - throttle:
       period: 1s
   - type: reverse
-  - type: filter_parts
-    filter_parts:
-      type: not
+  - filter_parts:
       not:
         type: is_all_caps
 
@@ -76,6 +73,8 @@ And you can run it like this:
 ```sh
 ./benthos-plugin-example -c ./yourconfig.yaml
 ```
+
+For more examples on how to configure your plugins check out [`./config`](./config).
 
 [plugin-main]: ./cmd/benthos-plugin-example/main.go#L22
 [plugin-lambda-main]: ./cmd/benthos-lambda-plugin-example/main.go#L22
