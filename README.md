@@ -5,7 +5,7 @@ This project demonstrates the recommended way to build your own Benthos componen
 
 ## Build
 
-Start by writing your plugins where ever you like, there are examples in this repo for [inputs][inputs], [processors][processors], [conditions][conditions] and [outputs][outputs] to copy from.
+Start by writing your plugins where ever you like, there are examples in this repo for [bloblang functions and methods][bloblang], [inputs][inputs], [processors][processors] and [outputs][outputs] to copy from.
 
 Next, author a main file that calls `service.Run()` and imports your plugins [as shown in this example][plugin-main]:
 
@@ -16,6 +16,7 @@ import (
 	"github.com/Jeffail/benthos/v3/lib/service"
 
 	// Add your plugin packages here
+	_ "github.com/benthosdev/benthos-plugin-example/bloblang"
 	_ "github.com/benthosdev/benthos-plugin-example/input"
 	_ "github.com/benthosdev/benthos-plugin-example/output"
 	_ "github.com/benthosdev/benthos-plugin-example/processor"
@@ -54,7 +55,7 @@ zip -m -j benthos-lambda.zip ./benthos-lambda-plugin-example
 
 The new service you've built will come with all of the usual Benthos components plus all of your custom plugins, which you can use like any other type. The only difference between your plugins and original Benthos components is that the config field for plugin specific fields is always `plugin`.
 
-For example, to use the example plugin components `gibberish`, `is_all_caps`, `reverse` and `blue_stdout` our config might look like this:
+For example, to use the example plugin components `gibberish`, `reverse` and `blue_stdout`, and our new Bloblang function `crazy_object` and method `into_object`, our config might look like this:
 
 ```yaml
 input:
@@ -67,9 +68,9 @@ pipeline:
   - throttle:
       period: 1s
   - type: reverse
-  - filter_parts:
-      not:
-        type: is_all_caps
+  - bloblang: |
+      root.gibberish = content()
+      root.more_stuff = crazy_object(10).into_object("foo")
 
 output:
   type: blue_stdout
@@ -87,5 +88,5 @@ For more examples on how to configure your plugins check out [`./config`](./conf
 [plugin-lambda-main]: ./cmd/benthos-lambda-plugin-example/main.go#L22
 [inputs]: ./input
 [processors]: ./processor
-[conditions]: ./condition
+[bloblang]: ./bloblang
 [outputs]: ./output

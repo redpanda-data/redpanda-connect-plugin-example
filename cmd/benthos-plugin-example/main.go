@@ -4,6 +4,7 @@ import (
 	"github.com/Jeffail/benthos/v3/lib/service"
 
 	// Add your plugin packages here
+	_ "github.com/benthosdev/benthos-plugin-example/bloblang"
 	_ "github.com/benthosdev/benthos-plugin-example/cache"
 	_ "github.com/benthosdev/benthos-plugin-example/condition"
 	_ "github.com/benthosdev/benthos-plugin-example/input"
