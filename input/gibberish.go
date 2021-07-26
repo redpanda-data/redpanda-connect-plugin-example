@@ -1,151 +1,52 @@
 package input
 
 import (
-	"errors"
+	"context"
 	"math/rand"
-	"sync"
-	"time"
 
-	"github.com/Jeffail/benthos/v3/lib/input"
-	"github.com/Jeffail/benthos/v3/lib/log"
-	"github.com/Jeffail/benthos/v3/lib/message"
-	"github.com/Jeffail/benthos/v3/lib/metrics"
-	"github.com/Jeffail/benthos/v3/lib/types"
+	"github.com/Jeffail/benthos/v3/public/service"
 )
 
 func init() {
-	input.RegisterPlugin(
-		"gibberish",
-		func() interface{} {
-			return NewGibberishConfig()
-		},
-		func(iconf interface{}, mgr types.Manager, logger log.Modular, stats metrics.Type) (types.Input, error) {
-			conf, ok := iconf.(*GibberishConfig)
-			if !ok {
-				return nil, errors.New("failed to cast config")
-			}
-			return NewGibberish(*conf, mgr, logger, stats)
-		},
-	)
+	configSpec := service.NewConfigSpec().
+		Summary("Creates an input that generates garbage.").
+		Field(service.NewIntField("length").Default(100))
 
-	input.DocumentPlugin(
-		"gibberish",
-		`
-This plugin example creates an input that generates gibberish ascii messages.`,
-		nil, // No need to sanitise the config.
-	)
-}
-
-// GibberishConfig contains config fields for our plugin type.
-type GibberishConfig struct {
-	Length int `json:"length" yaml:"length"`
-}
-
-// NewGibberishConfig creates a config with default values.
-func NewGibberishConfig() *GibberishConfig {
-	return &GibberishConfig{
-		Length: 1000,
-	}
-}
-
-// Gibberish is an example plugin that creates gibberish messages.
-type Gibberish struct {
-	size int
-
-	transactionsChan chan types.Transaction
-
-	log   log.Modular
-	stats metrics.Type
-
-	closeOnce  sync.Once
-	closeChan  chan struct{}
-	closedChan chan struct{}
-}
-
-// NewGibberish creates a new example plugin input type.
-func NewGibberish(
-	conf GibberishConfig,
-	mgr types.Manager,
-	log log.Modular,
-	stats metrics.Type,
-) (input.Type, error) {
-	e := &Gibberish{
-		size: conf.Length,
-
-		log:   log,
-		stats: stats,
-
-		transactionsChan: make(chan types.Transaction),
-		closeChan:        make(chan struct{}),
-		closedChan:       make(chan struct{}),
+	constructor := func(conf *service.ParsedConfig, mgr *service.Resources) (service.Input, error) {
+		length, err := conf.FieldInt("length")
+		if err != nil {
+			return nil, err
+		}
+		return service.AutoRetryNacks(&gibberishInput{length}), nil
 	}
 
-	go e.loop()
-	return e, nil
+	err := service.RegisterInput("gibberish", configSpec, constructor)
+	if err != nil {
+		panic(err)
+	}
 }
 
 //------------------------------------------------------------------------------
 
-func (e *Gibberish) loop() {
-	defer func() {
-		close(e.transactionsChan)
-		close(e.closedChan)
-	}()
+type gibberishInput struct {
+	length int
+}
 
-	resChan := make(chan types.Response)
-	for {
-		b := make([]byte, e.size)
-		for k := range b {
-			b[k] = byte((rand.Int() % 94) + 32)
-		}
+func (g *gibberishInput) Connect(ctx context.Context) error {
+	return nil
+}
 
-		// send batch to downstream processors
-		select {
-		case e.transactionsChan <- types.NewTransaction(
-			message.New([][]byte{b}),
-			resChan,
-		):
-		case <-e.closeChan:
-			return
-		}
-
-		// check transaction success
-		select {
-		case result := <-resChan:
-			if nil != result.Error() {
-				e.log.Errorln(result.Error().Error())
-				continue
-			}
-		case <-e.closeChan:
-			return
-		}
+func (g *gibberishInput) Read(ctx context.Context) (*service.Message, service.AckFunc, error) {
+	b := make([]byte, g.length)
+	for k := range b {
+		b[k] = byte((rand.Int() % 94) + 32)
 	}
+	return service.NewMessage(b), func(ctx context.Context, err error) error {
+		// Nacks are retries automatically when we use service.AutoRetryNacks
+		return nil
+	}, nil
 }
 
-// Connected returns true if this input is currently connected to its target.
-func (e *Gibberish) Connected() bool {
-	return true // We're always connected
-}
-
-// TransactionChan returns a transactions channel for consuming messages from
-// this input type.
-func (e *Gibberish) TransactionChan() <-chan types.Transaction {
-	return e.transactionsChan
-}
-
-// CloseAsync shuts down the input and stops processing requests.
-func (e *Gibberish) CloseAsync() {
-	e.closeOnce.Do(func() {
-		close(e.closeChan)
-	})
-}
-
-// WaitForClose blocks until the input has closed down.
-func (e *Gibberish) WaitForClose(timeout time.Duration) error {
-	select {
-	case <-e.closedChan:
-	case <-time.After(timeout):
-		return types.ErrTimeout
-	}
+func (g *gibberishInput) Close(ctx context.Context) error {
 	return nil
 }

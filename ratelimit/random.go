@@ -1,98 +1,50 @@
 package ratelimit
 
 import (
-	"errors"
+	"context"
+	"fmt"
 	"math/rand"
 	"time"
 
-	"github.com/Jeffail/benthos/v3/lib/log"
-	"github.com/Jeffail/benthos/v3/lib/metrics"
-	"github.com/Jeffail/benthos/v3/lib/ratelimit"
-	"github.com/Jeffail/benthos/v3/lib/types"
+	"github.com/Jeffail/benthos/v3/public/service"
 )
 
-//------------------------------------------------------------------------------
-
 func init() {
-	ratelimit.RegisterPlugin(
-		"random",
-		func() interface{} {
-			conf := NewRandomConfig()
-			return &conf
-		},
-		func(
-			iconf interface{},
-			mgr types.Manager,
-			logger log.Modular,
-			stats metrics.Type,
-		) (types.RateLimit, error) {
-			conf, ok := iconf.(*RandomConfig)
-			if !ok {
-				return nil, errors.New("failed to cast config")
-			}
-			return NewRandom(*conf, mgr, logger, stats)
-		},
-	)
-	ratelimit.DocumentPlugin(
-		"random",
-		`Randomly throttles by a specified duration based on a random number
-generator.`,
-		nil,
-	)
-}
-
-//------------------------------------------------------------------------------
-
-// RandomConfig contains config fields for the random rate limit.
-type RandomConfig struct {
-	ThrottleFor string `json:"throttle_for" yaml:"throttle_for"`
-}
-
-// NewRandomConfig returns a RandomConfig with default values.
-func NewRandomConfig() RandomConfig {
-	return RandomConfig{
-		ThrottleFor: "1s",
+	type randomRLConfig struct {
+		MaxDuration string `yaml:"maximum_duration"`
 	}
-}
 
-// Random is a rate limit that randomly throttles messages.
-type Random struct {
-	throttleFor time.Duration
-}
+	configSpec := service.NewStructConfigSpec(func() interface{} {
+		return &randomRLConfig{
+			MaxDuration: "1s",
+		}
+	})
 
-// NewRandom returns a Random cache.
-func NewRandom(
-	conf RandomConfig, mgr types.Manager, log log.Modular, stats metrics.Type,
-) (types.RateLimit, error) {
-	tFor, err := time.ParseDuration(conf.ThrottleFor)
+	constructor := func(conf *service.ParsedConfig, mgr *service.Resources) (service.RateLimit, error) {
+		c := conf.AsStruct().(*randomRLConfig)
+		maxDuration, err := time.ParseDuration(c.MaxDuration)
+		if err != nil {
+			return nil, fmt.Errorf("invalid max duration: %w", err)
+		}
+		return &randomRateLimit{maxDuration}, nil
+	}
+
+	err := service.RegisterRateLimit("random", configSpec, constructor)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
-	return &Random{
-		throttleFor: tFor,
-	}, nil
 }
 
 //------------------------------------------------------------------------------
 
-// Access the rate limited resource. Returns a duration or an error if the rate
-// limit check fails. The returned duration is either zero (meaning the resource
-// can be accessed) or a reasonable length of time to wait before requesting
-// again.
-func (r *Random) Access() (time.Duration, error) {
-	if rand.Int()%2 == 0 {
-		return r.throttleFor, nil
-	}
-	return 0, nil
+type randomRateLimit struct {
+	max time.Duration
 }
 
-// CloseAsync shuts down the rate limit.
-func (r *Random) CloseAsync() {
+func (r *randomRateLimit) Access(context.Context) (time.Duration, error) {
+	return time.Duration(rand.Int() % int(r.max)), nil
 }
 
-// WaitForClose blocks until the rate limit has closed down.
-func (r *Random) WaitForClose(timeout time.Duration) error {
+func (r *randomRateLimit) Close(ctx context.Context) error {
 	return nil
 }
-
-//------------------------------------------------------------------------------
