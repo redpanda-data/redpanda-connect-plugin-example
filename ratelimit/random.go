@@ -10,27 +10,24 @@ import (
 )
 
 func init() {
-	type randomRLConfig struct {
-		MaxDuration string `yaml:"maximum_duration"`
-	}
-
-	configSpec := service.NewStructConfigSpec(func() interface{} {
-		return &randomRLConfig{
-			MaxDuration: "1s",
-		}
-	})
+	configSpec := service.NewConfigSpec().
+		Field(service.NewStringField("maximum_duration").Default("1s"))
 
 	constructor := func(conf *service.ParsedConfig, mgr *service.Resources) (service.RateLimit, error) {
-		c := conf.AsStruct().(*randomRLConfig)
-		maxDuration, err := time.ParseDuration(c.MaxDuration)
+		durStr, err := conf.FieldString("maximum_duration")
+		if err != nil {
+			return nil, err
+		}
+
+		maxDuration, err := time.ParseDuration(durStr)
 		if err != nil {
 			return nil, fmt.Errorf("invalid max duration: %w", err)
 		}
-		return &randomRateLimit{maxDuration}, nil
+
+		return newRandomRateLimit(maxDuration), nil
 	}
 
-	err := service.RegisterRateLimit("random", configSpec, constructor)
-	if err != nil {
+	if err := service.RegisterRateLimit("random", configSpec, constructor); err != nil {
 		panic(err)
 	}
 }
@@ -39,6 +36,10 @@ func init() {
 
 type randomRateLimit struct {
 	max time.Duration
+}
+
+func newRandomRateLimit(max time.Duration) *randomRateLimit {
+	return &randomRateLimit{max}
 }
 
 func (r *randomRateLimit) Access(context.Context) (time.Duration, error) {

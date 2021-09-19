@@ -7,28 +7,33 @@ import (
 )
 
 func init() {
-	bloblang.RegisterFunction("crazy_object", func(args ...interface{}) (bloblang.Function, error) {
-		// Expects a single integer argument
-		var keys int
+	crazyObjectSpec := bloblang.NewPluginSpec().
+		Param(bloblang.NewInt64Param("keys"))
 
-		if err := bloblang.NewArgSpec().IntVar(&keys).Extract(args); err != nil {
+	err := bloblang.RegisterFunctionV2("crazy_object", crazyObjectSpec, func(args *bloblang.ParsedParams) (bloblang.Function, error) {
+		keys, err := args.GetInt64("keys")
+		if err != nil {
 			return nil, err
 		}
 
 		return func() (interface{}, error) {
 			obj := map[string]interface{}{}
-			for i := 0; i < keys; i++ {
+			for i := 0; i < int(keys); i++ {
 				obj[fmt.Sprintf("key%v", i)] = fmt.Sprintf("value%v", i)
 			}
 			return obj, nil
 		}, nil
 	})
+	if err != nil {
+		panic(err)
+	}
 
-	bloblang.RegisterMethod("into_object", func(args ...interface{}) (bloblang.Method, error) {
-		// Expects a single string argument
-		var key string
+	intoObjectSpec := bloblang.NewPluginSpec().
+		Param(bloblang.NewStringParam("key"))
 
-		if err := bloblang.NewArgSpec().StringVar(&key).Extract(args); err != nil {
+	err = bloblang.RegisterMethodV2("into_object", intoObjectSpec, func(args *bloblang.ParsedParams) (bloblang.Method, error) {
+		key, err := args.GetString("key")
+		if err != nil {
 			return nil, err
 		}
 
@@ -36,4 +41,7 @@ func init() {
 			return map[string]interface{}{key: v}, nil
 		}, nil
 	})
+	if err != nil {
+		panic(err)
+	}
 }

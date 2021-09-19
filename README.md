@@ -30,7 +30,7 @@ func main() {
 Finally, build your custom main func:
 
 ```sh
-go build ./cmd/benthos-plugin-example
+go build
 ```
 
 Alternatively build it as a Docker image with:
@@ -72,7 +72,7 @@ And you can run it like this:
 
 For more examples on how to configure your plugins check out [`./config`](./config).
 
-[plugin-main]: ./cmd/benthos-plugin-example/main.go#L15
+[plugin-main]: ./main.go#L15
 [inputs]: ./input
 [processors]: ./processor
 [bloblang]: ./bloblang
