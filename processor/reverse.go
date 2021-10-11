@@ -8,13 +8,14 @@ import (
 )
 
 func init() {
+	// Config spec is empty for now as we don't have any dynamic fields.
+	configSpec := service.NewConfigSpec()
+
 	constructor := func(conf *service.ParsedConfig, mgr *service.Resources) (service.Processor, error) {
-		return &reverseProcessor{
-			logger: mgr.Logger(),
-		}, nil
+		return newReverseProcessor(mgr.Logger(), mgr.Metrics()), nil
 	}
 
-	err := service.RegisterProcessor("reverse", service.NewConfigSpec(), constructor)
+	err := service.RegisterProcessor("reverse", configSpec, constructor)
 	if err != nil {
 		panic(err)
 	}
@@ -23,7 +24,17 @@ func init() {
 //------------------------------------------------------------------------------
 
 type reverseProcessor struct {
-	logger *service.Logger
+	logger           *service.Logger
+	countPalindromes *service.MetricCounter
+}
+
+func newReverseProcessor(logger *service.Logger, metrics *service.Metrics) *reverseProcessor {
+	// The logger and metrics components will already be labelled with the
+	// identifier of this component within a config.
+	return &reverseProcessor{
+		logger:           logger,
+		countPalindromes: metrics.NewCounter("palindromes"),
+	}
 }
 
 func (r *reverseProcessor) Process(ctx context.Context, m *service.Message) (service.MessageBatch, error) {
@@ -39,6 +50,7 @@ func (r *reverseProcessor) Process(ctx context.Context, m *service.Message) (ser
 
 	if bytes.Equal(newBytes, bytesContent) {
 		r.logger.Infof("Woah! This is like totally a palindrome: %s", bytesContent)
+		r.countPalindromes.Incr(1)
 	}
 
 	m.SetBytes(newBytes)

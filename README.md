@@ -40,6 +40,10 @@ go mod vendor
 docker build . -t benthos-plugin-example
 ```
 
+## Testing
+
+There are few examples of unit tests for plugin components in this repo. The notable examples are the [gibberish input tests][gibberish.input.tests] which demonstrates how to test config validation within your component constructors, and the [reverse processor tests][reverse.processor.tests] which tests the processor behaviour and also demonstrates testing a component that uses `*service.Logger` and `*service.Metrics`.
+
 ## Run
 
 The new service you've built will come with all of the usual Benthos components plus all of your custom plugins, which you can use like any other type. The only difference between your plugins and original Benthos components is that the config field for plugin specific fields is always `plugin`.
@@ -74,6 +78,8 @@ For more examples on how to configure your plugins check out [`./config`](./conf
 
 [plugin-main]: ./main.go#L15
 [inputs]: ./input
+[gibberish.input.tests]: ./input/gibberish_test.go
 [processors]: ./processor
+[reverse.processor.tests]: ./processor/reverse_test.go
 [bloblang]: ./bloblang
 [outputs]: ./output
