@@ -13,7 +13,7 @@ Next, author a main file that calls `service.Run()` and imports your plugins [as
 package main
 
 import (
-	"github.com/Jeffail/benthos/v3/public/service"
+	"github.com/benthosdev/benthos/v4/public/service"
 
 	// Add your plugin packages here
 	_ "github.com/benthosdev/benthos-plugin-example/bloblang"
@@ -56,9 +56,10 @@ input:
     length: 80
 
 pipeline:
+  threads: 1
   processors:
-  - throttle:
-      period: 1s
+  - sleep:
+      duration: 1s
   - reverse: {}
   - bloblang: |
       root.gibberish = content()

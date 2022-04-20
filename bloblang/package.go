@@ -3,7 +3,7 @@ package bloblang
 import (
 	"fmt"
 
-	"github.com/Jeffail/benthos/v3/public/bloblang"
+	"github.com/benthosdev/benthos/v4/public/bloblang"
 )
 
 func init() {
