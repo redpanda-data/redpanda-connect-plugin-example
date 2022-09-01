@@ -3,6 +3,8 @@ Benthos Plugin Example
 
 This project demonstrates the recommended way to build your own Benthos component plugins and run them in a custom distribution.
 
+_For an alternative project template that supports binary distribution, Docker, and Serverless deployments, see [makenew/benthos-plugin]._
+
 ## Build
 
 Start by writing your plugins where ever you like, there are examples in this repo for [bloblang functions and methods][bloblang], [inputs][inputs], [processors][processors] and [outputs][outputs] to copy from.
@@ -87,3 +89,4 @@ For more examples on how to configure your plugins check out [`./config`](./conf
 [reverse.processor.tests]: ./processor/reverse_test.go
 [bloblang]: ./bloblang
 [outputs]: ./output
+[makenew/benthos-plugin]: https://github.com/makenew/benthos-plugin
