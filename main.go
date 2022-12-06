@@ -5,8 +5,13 @@ import (
 
 	"github.com/benthosdev/benthos/v4/public/service"
 
-	// Import all standard Benthos components
-	_ "github.com/benthosdev/benthos/v4/public/components/all"
+	// Import only pure and standard io Benthos components
+	_ "github.com/benthosdev/benthos/v4/public/components/io"
+	_ "github.com/benthosdev/benthos/v4/public/components/pure"
+
+	// In order to import _all_ Benthos components for third party services
+	// uncomment the following line:
+	// _ "github.com/benthosdev/benthos/v4/public/components/all"
 
 	// Add your plugin packages here
 	_ "github.com/benthosdev/benthos-plugin-example/bloblang"
