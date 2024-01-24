@@ -1,0 +1,19 @@
+input:
+  file:
+    paths: [ ./data/input.txt ]
+    codec: lines
+
+pipeline:
+  threads: 1
+  processors:
+  - sleep:
+      duration: 1s
+  - bloblang: |
+      # root = this
+      root.more_stuff = ipv4str_as_bytes("200.128.0.65")
+
+output:
+  label: "plain"
+  file:
+    path: ./data/data.out # No default (required)
+    codec: lines
