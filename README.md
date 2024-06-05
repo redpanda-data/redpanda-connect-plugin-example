@@ -1,9 +1,7 @@
-Benthos Plugin Example
+Connect Plugin Example
 ======================
 
-This project demonstrates the recommended way to build your own Benthos component plugins and run them in a custom distribution.
-
-_For an alternative project template that supports binary distribution, Docker, and Serverless deployments, see [makenew/benthos-plugin]._
+This project demonstrates the recommended way to build your own Redpanda Connect component plugins and run them in a custom distribution.
 
 ## Build
 
@@ -15,13 +13,16 @@ Next, author a main file that calls `service.Run()` and imports your plugins [as
 package main
 
 import (
-	"github.com/benthosdev/benthos/v4/public/service"
+	"context"
 
-	// Import all standard Benthos components
-	_ "github.com/benthosdev/benthos/v4/public/components/all"
+	"github.com/redpanda-data/benthos/v4/public/service"
+
+	// Import full suite of FOSS connect plugins
+	_ "github.com/redpanda-data/connect/public/bundle/free/v4"
 
 	// Add your plugin packages here
 	_ "github.com/benthosdev/benthos-plugin-example/bloblang"
+	_ "github.com/benthosdev/benthos-plugin-example/cache"
 	_ "github.com/benthosdev/benthos-plugin-example/input"
 	_ "github.com/benthosdev/benthos-plugin-example/output"
 	_ "github.com/benthosdev/benthos-plugin-example/processor"
@@ -41,8 +42,7 @@ go build
 Alternatively build it as a Docker image with:
 
 ```sh
-go mod vendor
-docker build . -t benthos-plugin-example
+docker build . -t connect-plugin-example
 ```
 
 ## Testing
@@ -51,9 +51,7 @@ There are few examples of unit tests for plugin components in this repo. The not
 
 ## Run
 
-The new service you've built will come with all of the usual Benthos components plus all of your custom plugins, which you can use like any other type. The only difference between your plugins and original Benthos components is that the config field for plugin specific fields is always `plugin`.
-
-For example, to use the example plugin components `gibberish`, `reverse` and `blue_stdout`, and our new Bloblang function `crazy_object` and method `into_object`, our config might look like this:
+The new service you've built will come with all of the usual Redpanda Connect components plus all of your custom plugins, which you can use like any other type. For example, to use the example plugin components `gibberish`, `reverse` and `blue_stdout`, and our new Bloblang function `crazy_object` and method `into_object`, our config might look like this:
 
 ```yaml
 input:
@@ -77,7 +75,7 @@ output:
 And you can run it like this:
 
 ```sh
-./benthos-plugin-example -c ./yourconfig.yaml
+./connect-plugin-example -c ./yourconfig.yaml
 ```
 
 For more examples on how to configure your plugins check out [`./config`](./config).
@@ -89,4 +87,3 @@ For more examples on how to configure your plugins check out [`./config`](./conf
 [reverse.processor.tests]: ./processor/reverse_test.go
 [bloblang]: ./bloblang
 [outputs]: ./output
-[makenew/benthos-plugin]: https://github.com/makenew/benthos-plugin

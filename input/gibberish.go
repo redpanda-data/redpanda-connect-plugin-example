@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"math/rand"
 
-	"github.com/benthosdev/benthos/v4/public/service"
+	"github.com/redpanda-data/benthos/v4/public/service"
 )
 
 var gibberishConfigSpec = service.NewConfigSpec().
