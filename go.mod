@@ -4,7 +4,7 @@ go 1.22.3
 
 require (
 	github.com/redpanda-data/benthos/v4 v4.28.1
-	github.com/redpanda-data/connect/public/bundle/free/v4 v4.0.0-20240604101334-814b29028c0e
+	github.com/redpanda-data/connect/public/bundle/free/v4 v4.29.0
 	github.com/stretchr/testify v1.9.0
 )
 
@@ -208,7 +208,7 @@ require (
 	github.com/mattn/go-colorable v0.1.13 // indirect
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/mattn/go-runewidth v0.0.15 // indirect
-	github.com/microcosm-cc/bluemonday v1.0.25 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
 	github.com/microsoft/gocosmos v1.1.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/montanaflynn/stats v0.7.0 // indirect
@@ -245,7 +245,7 @@ require (
 	github.com/rabbitmq/amqp091-go v1.9.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/redis/go-redis/v9 v9.4.0 // indirect
-	github.com/redpanda-data/connect/v4 v4.28.1-0.20240603161855-9f6190c6325c // indirect
+	github.com/redpanda-data/connect/v4 v4.29.0 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rickb777/date v1.20.5 // indirect
 	github.com/rickb777/plural v1.4.1 // indirect
