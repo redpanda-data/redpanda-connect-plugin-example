@@ -4,8 +4,8 @@ input:
 
 pipeline:
   processors:
-  - throttle:
-      period: 1s
+  - sleep:
+      duration: 1s
   - reverse: {}
 
 output:

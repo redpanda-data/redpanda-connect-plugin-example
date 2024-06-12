@@ -4,11 +4,9 @@ input:
 
 pipeline:
   processors:
-  - encode:
-      scheme: base64
-  - bloblang: 'root.gibberish = content().string()'
-  - throttle:
-      period: 1s
+  - bloblang: 'root.gibberish = content().string().encode("base64")'
+  - sleep:
+      duration: 1s
 
 output:
   blue_stdout: {}
