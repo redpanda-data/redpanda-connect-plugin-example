@@ -11,9 +11,11 @@ RUN go mod download
 
 # Build
 COPY . /go/src/github.com/redpanda-data/connect-plugin-example/
+
 # Tag timetzdata required for busybox base image:
 # https://github.com/benthosdev/benthos/issues/897
-RUN make TAGS="timetzdata"
+RUN --mount=type=cache,target=/root/.cache/go-build \
+    --mount=type=cache,target=/go/pkg/mod go build -tags timetzdata -ldflags="-w -s" -o connect-plugin-example
 
 # Pack
 FROM busybox AS package
