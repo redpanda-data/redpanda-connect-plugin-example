@@ -1,5 +1,5 @@
-Connect Plugin Example
-======================
+Redpanda Connect Plugin Example
+===============================
 
 This project demonstrates the recommended way to build your own Redpanda Connect component plugins and run them in a custom distribution.
 
@@ -21,11 +21,11 @@ import (
 	_ "github.com/redpanda-data/connect/public/bundle/free/v4"
 
 	// Add your plugin packages here
-	_ "github.com/benthosdev/benthos-plugin-example/bloblang"
-	_ "github.com/benthosdev/benthos-plugin-example/cache"
-	_ "github.com/benthosdev/benthos-plugin-example/input"
-	_ "github.com/benthosdev/benthos-plugin-example/output"
-	_ "github.com/benthosdev/benthos-plugin-example/processor"
+	_ "github.com/redpanda-data/redpanda-connect-plugin-example/bloblang"
+	_ "github.com/redpanda-data/redpanda-connect-plugin-example/cache"
+	_ "github.com/redpanda-data/redpanda-connect-plugin-example/input"
+	_ "github.com/redpanda-data/redpanda-connect-plugin-example/output"
+	_ "github.com/redpanda-data/redpanda-connect-plugin-example/processor"
 )
 
 func main() {
@@ -42,7 +42,7 @@ go build
 Alternatively build it as a Docker image with:
 
 ```sh
-docker build . -t connect-plugin-example
+docker build . -t redpanda-connect-plugin-example
 ```
 
 ## Testing
@@ -75,7 +75,7 @@ output:
 And you can run it like this:
 
 ```sh
-./connect-plugin-example -c ./yourconfig.yaml
+./redpanda-connect-plugin-example -c ./yourconfig.yaml
 ```
 
 For more examples on how to configure your plugins check out [`./config`](./config).
