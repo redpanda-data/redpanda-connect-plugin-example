@@ -1,4 +1,2 @@
 benthos-plugin-example
-connect-plugin-example
-go.sum
-vendor
+redpanda-connect-plugin-example
