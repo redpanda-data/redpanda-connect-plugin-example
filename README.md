@@ -45,6 +45,15 @@ Alternatively build it as a Docker image with:
 docker build . -t redpanda-connect-plugin-example
 ```
 
+## Upgrading
+
+In order to track the latest upstream changes to Redpanda Connect, upgrade the `github.com/redpanda-data/connect/v4` package and all other transient dependencies will be pulled up to the latest versions:
+
+```sh
+go get github.com/redpanda-data/connect/v4@latest
+go mod tidy
+```
+
 ## Testing
 
 There are few examples of unit tests for plugin components in this repo. The notable examples are the [gibberish input tests][gibberish.input.tests] which demonstrates how to test config validation within your component constructors, and the [reverse processor tests][reverse.processor.tests] which tests the processor behaviour and also demonstrates testing a component that uses `*service.Logger` and `*service.Metrics`.

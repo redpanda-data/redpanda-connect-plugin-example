@@ -3,7 +3,7 @@ module github.com/redpanda-data/redpanda-connect-plugin-example
 go 1.22.3
 
 require (
-	github.com/redpanda-data/benthos/v4 v4.28.1
+	github.com/redpanda-data/benthos/v4 v4.30.0
 	github.com/redpanda-data/connect/public/bundle/free/v4 v4.29.0
 	github.com/stretchr/testify v1.9.0
 )
@@ -53,6 +53,7 @@ require (
 	github.com/apache/pulsar-client-go v0.12.0 // indirect
 	github.com/apache/thrift v0.18.1 // indirect
 	github.com/ardielle/ardielle-go v1.5.2 // indirect
+	github.com/aws/aws-lambda-go v1.47.0 // indirect
 	github.com/aws/aws-sdk-go-v2 v1.25.0 // indirect
 	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.6.0 // indirect
 	github.com/aws/aws-sdk-go-v2/config v1.26.6 // indirect
@@ -245,7 +246,7 @@ require (
 	github.com/rabbitmq/amqp091-go v1.9.0 // indirect
 	github.com/rcrowley/go-metrics v0.0.0-20201227073835-cf1acfcdf475 // indirect
 	github.com/redis/go-redis/v9 v9.4.0 // indirect
-	github.com/redpanda-data/connect/v4 v4.29.0 // indirect
+	github.com/redpanda-data/connect/v4 v4.30.1 // indirect
 	github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec // indirect
 	github.com/rickb777/date v1.20.5 // indirect
 	github.com/rickb777/plural v1.4.1 // indirect
@@ -256,7 +257,7 @@ require (
 	github.com/segmentio/encoding v0.3.6 // indirect
 	github.com/segmentio/ksuid v1.0.4 // indirect
 	github.com/shopspring/decimal v1.3.1 // indirect
-	github.com/sijms/go-ora/v2 v2.8.7 // indirect
+	github.com/sijms/go-ora/v2 v2.8.19 // indirect
 	github.com/sirupsen/logrus v1.9.3 // indirect
 	github.com/smira/go-statsd v1.3.3 // indirect
 	github.com/snowflakedb/gosnowflake v1.7.2 // indirect
