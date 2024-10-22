@@ -1,6 +1,6 @@
 module github.com/redpanda-data/redpanda-connect-plugin-example
 
-go 1.22.3
+go 1.23.1
 
 require (
 	github.com/redpanda-data/benthos/v4 v4.38.0
